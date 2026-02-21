@@ -1,76 +1,16 @@
 'use client';
 
-// components/flow/NodeInspector.tsx
-// Right panel — shows settings of the currently selected node
-
 import { useCallback } from 'react';
 import { useReactFlow } from 'reactflow';
 import { StageData, NODE_CATEGORY_CONFIG } from '@/types';
+import { getResolvedStageIconName, renderStageIcon } from '@/lib/stageIcons';
+import { IconPickerField } from './node-inspector/IconPickerField';
+import { NodeInspectorEmptyState } from './node-inspector/NodeInspectorEmptyState';
+import { TextAreaField, TextField, ToggleField } from './node-inspector/Fields';
 
 interface NodeInspectorProps {
   nodeId: string | null;
 }
-
-// ── Tiny field components ─────────────────────────────────────────────────────
-
-function TextField({
-  label, value, onChange,
-}: { label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <div>
-      <label className="mb-1 block text-[10px] uppercase tracking-wider text-neutral-500 dark:text-white/30">
-        {label}
-      </label>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-neutral-300 bg-white/80 px-3 py-2 text-xs text-neutral-700 outline-none transition-colors focus:border-neutral-500 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:focus:border-white/30"
-      />
-    </div>
-  );
-}
-
-function TextAreaField({
-  label, value, onChange, rows = 3,
-}: { label: string; value: string; onChange: (v: string) => void; rows?: number }) {
-  return (
-    <div>
-      <label className="mb-1 block text-[10px] uppercase tracking-wider text-neutral-500 dark:text-white/30">
-        {label}
-      </label>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={rows}
-        className="w-full resize-none rounded-lg border border-neutral-300 bg-white/80 px-3 py-2 text-xs text-neutral-700 outline-none transition-colors focus:border-neutral-500 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:focus:border-white/30"
-      />
-    </div>
-  );
-}
-
-function ToggleField({
-  label, value, onChange,
-}: { label: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="flex items-center justify-between">
-      <label className="text-xs text-neutral-700 dark:text-white/60">{label}</label>
-      <button
-        onClick={() => onChange(!value)}
-        className={`relative w-9 h-5 rounded-full transition-colors ${
-          value ? 'bg-blue-500' : 'bg-neutral-300 dark:bg-white/10'
-        }`}
-      >
-        <span
-          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-            value ? 'translate-x-4' : ''
-          }`}
-        />
-      </button>
-    </div>
-  );
-}
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 export function NodeInspector({ nodeId }: NodeInspectorProps) {
   const { getNode, setNodes, deleteElements, getEdges } = useReactFlow();
@@ -79,6 +19,7 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
   const data: StageData | null = node ? (node.data as StageData) : null;
   const category = data?.category ?? 'consideration';
   const catConfig = data ? NODE_CATEGORY_CONFIG[category] : null;
+  const resolvedIconKey = data ? getResolvedStageIconName(data) : null;
 
   const updateData = useCallback(
     (partial: Partial<StageData>) => {
@@ -92,13 +33,10 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
     [nodeId, setNodes]
   );
 
-  const updateParam = useCallback(
-    (key: string, value: string | number | boolean) => {
-      if (!data) return;
-      updateData({ params: { ...(data.params ?? {}), [key]: value } });
-    },
-    [data, updateData]
-  );
+  const updateParam = (key: string, value: string | number | boolean) => {
+    if (!data) return;
+    updateData({ params: { ...(data.params ?? {}), [key]: value } });
+  };
 
   const handleDelete = () => {
     if (!nodeId) return;
@@ -108,32 +46,14 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
     deleteElements({ nodes: [{ id: nodeId }], edges });
   };
 
-  // ── Empty state ─────────────────────────────────────────────────────────────
   if (!data || !catConfig) {
-    return (
-      <aside className="flex h-full w-64 flex-col items-center justify-center border-l border-neutral-300 bg-white/90 px-6 text-center backdrop-blur-sm dark:border-white/5 dark:bg-[#0a0c12]">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-200 dark:bg-white/5">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="1.5" className="text-neutral-500 dark:text-white/20">
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="7" height="7" rx="1" />
-          </svg>
-        </div>
-        <p className="text-xs font-medium text-neutral-700 dark:text-white/20">Select a node</p>
-        <p className="mt-1 text-[10px] text-neutral-500 dark:text-white/20">
-          Click any node on the canvas to inspect and edit its parameters
-        </p>
-      </aside>
-    );
+    return <NodeInspectorEmptyState />;
   }
 
   const params = data.params ?? {};
 
   return (
-    <aside className="flex h-full w-64 flex-col overflow-hidden border-l border-neutral-300 bg-white/90 backdrop-blur-sm dark:border-white/5 dark:bg-[#0a0c12]">
-      {/* Header */}
+    <aside className="relative z-30 flex h-full w-64 flex-col overflow-visible border-l border-neutral-300 bg-white/90 backdrop-blur-sm dark:border-white/5 dark:bg-[#0a0c12]">
       <div
         className="border-b border-neutral-300 px-4 pb-3 pt-4 dark:border-white/5"
         style={{ borderTopColor: catConfig.accent, borderTopWidth: 2 }}
@@ -146,9 +66,16 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
             >
               {catConfig.label}
             </span>
-            <h3 className="mt-0.5 truncate text-sm font-semibold text-neutral-900 dark:text-white">
-              {data.title}
-            </h3>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              {resolvedIconKey && renderStageIcon(resolvedIconKey, category, {
+                size: 14,
+                strokeWidth: 2.2,
+                style: { color: catConfig.accent },
+              })}
+              <h3 className="truncate text-sm font-semibold text-neutral-900 dark:text-white">
+                {data.title}
+              </h3>
+            </div>
           </div>
           <button
             onClick={handleDelete}
@@ -166,9 +93,7 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
         </div>
       </div>
 
-      {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-        {/* ── Core fields ── */}
+      <div className="flex-1 space-y-5 overflow-y-auto overflow-x-visible px-4 py-4">
         <section>
           <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-white/20">
             General
@@ -179,6 +104,14 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
               value={data.title}
               onChange={(v) => updateData({ title: v })}
             />
+            {resolvedIconKey && (
+              <IconPickerField
+                value={resolvedIconKey}
+                category={category}
+                accentColor={catConfig.accent}
+                onChange={(v) => updateData({ icon: v })}
+              />
+            )}
             <TextAreaField
               label="Description"
               value={data.description}
@@ -188,7 +121,6 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
           </div>
         </section>
 
-        {/* ── Dynamic params ── */}
         {Object.keys(params).length > 0 && (
           <section>
             <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-white/20">
@@ -206,6 +138,7 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
                     />
                   );
                 }
+
                 if (key === 'prompt' || key === 'headers' || key === 'mapping') {
                   return (
                     <TextAreaField
@@ -217,6 +150,7 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
                     />
                   );
                 }
+
                 return (
                   <TextField
                     key={key}
@@ -230,7 +164,6 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
           </section>
         )}
 
-        {/* ── Node ID (read-only) ── */}
         <section>
           <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-white/20">
             Meta

@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+// components/flow/FlowEditor.tsx
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -24,6 +25,7 @@ import { StageNode } from './StageNode';
 import { NodesSidebar } from './NodesSidebar';
 import { NodeInspector } from './NodeInspector';
 import { NODE_TEMPLATES, StageData, NODE_CATEGORY_CONFIG } from '@/types';
+import { getDefaultStageIcon } from '@/lib/stageIcons';
 
 const nodeTypes = { stage: StageNode };
 
@@ -36,6 +38,7 @@ const INITIAL_NODES: Node<StageData>[] = [
       title: 'Awareness',
       description: 'Customer discovers your brand through ads, social media, or referrals.',
       category: 'awareness',
+      icon: 'Megaphone',
       params: { channel: 'Paid social' },
     },
   },
@@ -47,6 +50,7 @@ const INITIAL_NODES: Node<StageData>[] = [
       title: 'Interest',
       description: 'Customer visits your product page and explores key benefits.',
       category: 'interest',
+      icon: 'Search',
       params: { touchpoint: 'Website' },
     },
   },
@@ -58,6 +62,7 @@ const INITIAL_NODES: Node<StageData>[] = [
       title: 'Consideration',
       description: 'Customer compares pricing, reviews, and alternatives.',
       category: 'consideration',
+      icon: 'Scale',
       params: { proof: 'Testimonials' },
     },
   },
@@ -69,6 +74,7 @@ const INITIAL_NODES: Node<StageData>[] = [
       title: 'Intent',
       description: 'Customer requests demo or asks final pre-purchase questions.',
       category: 'intent',
+      icon: 'Target',
       params: { signal: 'Demo request' },
     },
   },
@@ -80,6 +86,7 @@ const INITIAL_NODES: Node<StageData>[] = [
       title: 'Purchase',
       description: 'Customer completes checkout and receives confirmation.',
       category: 'purchase',
+      icon: 'ShoppingCart',
       params: { conversion: 'Checkout complete' },
     },
   },
@@ -94,6 +101,7 @@ const INITIAL_EDGES: Edge[] = [
 
 let nodeIdCounter = 100;
 const FLOW_STORAGE_KEY = 'customer-journey-flow:flow:v1';
+const emptySubscribe = () => () => {};
 
 interface PersistedFlow {
   nodes: Node<StageData>[];
@@ -117,9 +125,14 @@ function getMaxGeneratedNodeId(nodes: Node<StageData>[]) {
   }, 100);
 }
 
+function useIsMounted() {
+  return useSyncExternalStore(emptySubscribe, () => true, () => false);
+}
+
 function FlowEditorInner() {
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme !== 'light';
+  const mounted = useIsMounted();
+  const isDark = mounted && resolvedTheme === 'dark';
   const [nodes, setNodes, onNodesChange] = useNodesState(INITIAL_NODES);
   const [edges, setEdges, onEdgesChange] = useEdgesState(INITIAL_EDGES);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -248,6 +261,7 @@ function FlowEditorInner() {
         title: 'New Stage',
         description: 'Double-click to edit',
         category: 'awareness',
+        icon: getDefaultStageIcon('awareness'),
         params: {},
       },
     };

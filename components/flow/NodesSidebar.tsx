@@ -99,7 +99,6 @@ export function NodesSidebar() {
                         onDragStart={(e) => onDragStart(e, globalIdx)}
                         className="group flex cursor-grab items-center gap-2.5 rounded-lg border border-transparent px-2.5 py-2 transition-all active:cursor-grabbing hover:border-neutral-300 hover:bg-neutral-100 dark:hover:border-white/10 dark:hover:bg-white/5"
                       >
-                        <span className="text-base leading-none">{template.icon}</span>
                         <div className="min-w-0">
                           <p className="truncate text-xs font-medium text-neutral-700 group-hover:text-neutral-900 dark:text-white/70 dark:group-hover:text-white/90">
                             {template.label}

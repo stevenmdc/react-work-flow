@@ -1,36 +1,121 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Customer Journey Flow
+
+Customer Journey Flow is a visual editor to design and iterate customer journey stages.
+It is built with Next.js (App Router) and React Flow.
+
+## What It Does
+
+- Start from a default journey (Awareness → Purchase)
+- Drag and drop stage templates from the left sidebar
+- Connect stages with animated edges
+- Reconnect or delete links
+- Edit node content in a right-side inspector
+- Pick Lucide icons for each node (searchable icon picker)
+- Persist graph data in `localStorage`
+- Switch between light and dark themes
+
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19
+- React Flow 11
+- Tailwind CSS 4
+- TypeScript
+- next-themes
+- lucide-react
+
+## Project Structure
+
+```text
+app/
+  layout.tsx
+  page.tsx
+  globals.css
+
+components/
+  flow/
+    FlowEditor.tsx
+    StageNode.tsx
+    NodesSidebar.tsx
+    NodeInspector.tsx
+    node-inspector/
+      Fields.tsx
+      IconPickerField.tsx
+      NodeInspectorEmptyState.tsx
+    index.ts
+  theme/
+    ThemeToggle.tsx
+
+lib/
+  flowUtils.ts
+  stageIcons.ts
+
+types/
+  index.ts
+```
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Run in development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev    # start dev server
+npm run lint   # run ESLint
+npm run build  # production build check
+npm run start  # run production server
+```
 
-## Learn More
+## Usage Notes
 
-To learn more about Next.js, take a look at the following resources:
+- Double-click a node title to edit it inline.
+- Click a node to edit details in the inspector.
+- Use the icon picker (`Search icon`) to select from Lucide icons.
+- Click an edge to select it, then delete with:
+  - `Delete` / `Backspace`
+  - double-click on edge
+  - `Delete link` button in toolbar
+- Drag edge endpoints to reconnect links.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Persistence
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Flow state is automatically saved to browser `localStorage`.
 
-## Deploy on Vercel
+Storage key:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```text
+customer-journey-flow:flow:v1
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+To reset data quickly, clear this key in DevTools.
+
+## Styling & Theme
+
+- Tailwind CSS utilities drive all UI styling.
+- Dark mode is managed by `next-themes` and class-based dark variants.
+
+## Development Checklist
+
+Before shipping changes:
+
+```bash
+npm run lint
+npm run build
+```
+
+## License
+
+Private project (no license file provided).

@@ -10,10 +10,13 @@ export type NodeCategory =
   | 'intent'
   | 'purchase';
 
+export type StageIconKey = string;
+
 export interface StageData {
   title: string;
   description: string;
   category?: NodeCategory;
+  icon?: StageIconKey;
   params?: StageParams;
 }
 
@@ -64,6 +67,7 @@ export const NODE_TEMPLATES: NodeTemplate[] = [
       title: 'Awareness',
       description: 'Customer discovers your brand through ads, content, or referrals.',
       category: 'awareness',
+      icon: 'Megaphone',
       params: { channel: 'Social + Search' },
     },
   },
@@ -77,6 +81,7 @@ export const NODE_TEMPLATES: NodeTemplate[] = [
       title: 'Interest',
       description: 'Customer explores your offer and starts evaluating fit.',
       category: 'interest',
+      icon: 'Search',
       params: { contentType: 'Feature page' },
     },
   },
@@ -90,6 +95,7 @@ export const NODE_TEMPLATES: NodeTemplate[] = [
       title: 'Consideration',
       description: 'Customer compares options, pricing, and proof points.',
       category: 'consideration',
+      icon: 'Scale',
       params: { proof: 'Case studies + Reviews' },
     },
   },
@@ -103,6 +109,7 @@ export const NODE_TEMPLATES: NodeTemplate[] = [
       title: 'Intent',
       description: 'Customer asks final questions and plans purchase timing.',
       category: 'intent',
+      icon: 'Target',
       params: { trigger: 'Demo request' },
     },
   },
@@ -116,6 +123,7 @@ export const NODE_TEMPLATES: NodeTemplate[] = [
       title: 'Purchase',
       description: 'Customer completes checkout and receives confirmation.',
       category: 'purchase',
+      icon: 'ShoppingCart',
       params: { conversionGoal: 'Order completed' },
     },
   },
