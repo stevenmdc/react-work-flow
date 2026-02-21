@@ -1,7 +1,7 @@
 'use client';
 
 // components/flow/FlowEditor.tsx
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -269,7 +269,19 @@ function FlowEditorInner() {
     setSelectedNodeId(newNode.id);
   };
 
-  const edgeStrokeColor = isDark ? '#ffffff35' : '#47556988';
+  const edgeStrokeColor = isDark ? '#e2e8f080' : '#334155b3';
+  const themedEdges = useMemo(
+    () =>
+      edges.map((edge) => ({
+        ...edge,
+        style: {
+          ...edge.style,
+          stroke: edgeStrokeColor,
+          strokeWidth: edge.style?.strokeWidth ?? 1.8,
+        },
+      })),
+    [edgeStrokeColor, edges]
+  );
   const dotColor = isDark ? '#ffffff26' : '#33415566';
   const dotSize = isDark ? 1.3 : 1.6;
   const minimapMask = isDark ? '#0a0c1288' : '#e2e8f099';
@@ -282,7 +294,7 @@ function FlowEditorInner() {
       <div className="flex-1 h-full relative" ref={reactFlowWrapper}>
         <ReactFlow
           nodes={nodes}
-          edges={edges}
+          edges={themedEdges}
           nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
@@ -305,6 +317,7 @@ function FlowEditorInner() {
             animated: true,
             updatable: true,
           }}
+          connectionLineStyle={{ stroke: edgeStrokeColor, strokeWidth: 1.8 }}
         >
           <Background
             variant={BackgroundVariant.Dots}
