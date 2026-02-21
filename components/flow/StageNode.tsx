@@ -61,9 +61,17 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
         style={{ backgroundColor: catConfig.accent }}
       />
 
-      {/* Handle in */}
+      {/* Handles in */}
       <Handle
         type="target"
+        id="target-top"
+        position={Position.Top}
+        className="!h-3 !w-3 !rounded-full !border-2 !border-slate-100 dark:!border-[#0f1117]"
+        style={{ backgroundColor: catConfig.accent }}
+      />
+      <Handle
+        type="target"
+        id="target-left"
         position={Position.Left}
         className="!h-3 !w-3 !rounded-full !border-2 !border-slate-100 dark:!border-[#0f1117]"
         style={{ backgroundColor: catConfig.accent }}
@@ -101,21 +109,20 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
         <p className="mb-3 line-clamp-2 text-[11px] leading-snug text-neutral-600 dark:text-white/40">
           {data.description}
         </p>
-
-        <div className="flex justify-between gap-2 text-[10px] font-mono">
-          <span className="rounded border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-neutral-600 dark:border-white/10 dark:bg-white/5 dark:text-white/50">
-            ↙ {inCount} in
-          </span>
-          <span className="rounded border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-neutral-600 dark:border-white/10 dark:bg-white/5 dark:text-white/50">
-            {outCount} out ↗
-          </span>
-        </div>
       </div>
 
-      {/* Handle out */}
+      {/* Handles out */}
       <Handle
         type="source"
+        id="source-right"
         position={Position.Right}
+        className="!h-3 !w-3 !rounded-full !border-2 !border-slate-100 dark:!border-[#0f1117]"
+        style={{ backgroundColor: catConfig.accent }}
+      />
+      <Handle
+        type="source"
+        id="source-bottom"
+        position={Position.Bottom}
         className="!h-3 !w-3 !rounded-full !border-2 !border-slate-100 dark:!border-[#0f1117]"
         style={{ backgroundColor: catConfig.accent }}
       />
