@@ -17,6 +17,7 @@ import ReactFlow, {
   ReactFlowInstance,
   Panel,
   Node,
+  ConnectionLineType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useTheme } from 'next-themes';
@@ -24,10 +25,12 @@ import { useTheme } from 'next-themes';
 import { StageNode } from './StageNode';
 import { NodesSidebar } from './NodesSidebar';
 import { NodeInspector } from './NodeInspector';
+import { GlowStepEdge } from './GlowStepEdge';
 import { NODE_TEMPLATES, StageData, NODE_CATEGORY_CONFIG } from '@/types';
 import { getDefaultStageIcon } from '@/lib/stageIcons';
 
 const nodeTypes = { stage: StageNode };
+const edgeTypes = { glow: GlowStepEdge };
 
 const INITIAL_NODES: Node<StageData>[] = [
   {
@@ -93,10 +96,10 @@ const INITIAL_NODES: Node<StageData>[] = [
 ];
 
 const INITIAL_EDGES: Edge[] = [
-  { id: 'e-awareness-interest', source: 'awareness', target: 'interest', animated: true },
-  { id: 'e-interest-consideration', source: 'interest', target: 'consideration', animated: true },
-  { id: 'e-consideration-intent', source: 'consideration', target: 'intent', animated: true },
-  { id: 'e-intent-purchase', source: 'intent', target: 'purchase', animated: true },
+  { id: 'e-awareness-interest', source: 'awareness', target: 'interest', type: 'glow' },
+  { id: 'e-interest-consideration', source: 'interest', target: 'consideration', type: 'glow' },
+  { id: 'e-consideration-intent', source: 'consideration', target: 'intent', type: 'glow' },
+  { id: 'e-intent-purchase', source: 'intent', target: 'purchase', type: 'glow' },
 ];
 
 let nodeIdCounter = 100;
@@ -175,7 +178,7 @@ function FlowEditorInner() {
 
   const onConnect = useCallback(
     (params: Connection) =>
-      setEdges((eds) => addEdge({ ...params, animated: true, updatable: true }, eds)),
+      setEdges((eds) => addEdge({ ...params, type: 'glow', animated: false, updatable: true }, eds)),
     [setEdges]
   );
 
@@ -212,6 +215,11 @@ function FlowEditorInner() {
     setEdges((eds) => eds.filter((e) => e.id !== selectedEdgeId));
     setSelectedEdgeId(null);
   }, [selectedEdgeId, setEdges]);
+
+  const handleNodeDeleted = useCallback((deletedId: string) => {
+    setSelectedNodeId((prev) => (prev === deletedId ? null : prev));
+    setSelectedEdgeId(null);
+  }, []);
 
   // ── Drag-and-drop from NodesSidebar ────────────────────────────────────────
   const onDragOver = useCallback((e: React.DragEvent) => {
@@ -270,17 +278,25 @@ function FlowEditorInner() {
   };
 
   const edgeStrokeColor = isDark ? '#e2e8f080' : '#334155b3';
+  const beamColor = isDark ? '#c084fc' : '#9333ea';
   const themedEdges = useMemo(
     () =>
       edges.map((edge) => ({
         ...edge,
+        type: 'glow',
+        animated: false,
+        data: {
+          ...edge.data,
+          beamColor,
+        },
         style: {
           ...edge.style,
           stroke: edgeStrokeColor,
           strokeWidth: edge.style?.strokeWidth ?? 1.8,
+          strokeDasharray: 'none',
         },
       })),
-    [edgeStrokeColor, edges]
+    [beamColor, edgeStrokeColor, edges]
   );
   const dotColor = isDark ? '#ffffff26' : '#33415566';
   const dotSize = isDark ? 1.3 : 1.6;
@@ -296,6 +312,7 @@ function FlowEditorInner() {
           nodes={nodes}
           edges={themedEdges}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
@@ -308,15 +325,17 @@ function FlowEditorInner() {
           onDragOver={onDragOver}
           onDrop={onDrop}
           edgesUpdatable
-          deleteKeyCode={['Delete', 'Backspace']}
+          deleteKeyCode={['Delete']}
           elevateEdgesOnSelect
           fitView
           proOptions={{ hideAttribution: false }}
           defaultEdgeOptions={{
+            type: 'glow',
             style: { stroke: edgeStrokeColor, strokeWidth: 1.8 },
-            animated: true,
+            animated: false,
             updatable: true,
           }}
+          connectionLineType={ConnectionLineType.Step}
           connectionLineStyle={{ stroke: edgeStrokeColor, strokeWidth: 1.8 }}
         >
           <Background
@@ -377,7 +396,13 @@ function FlowEditorInner() {
         </ReactFlow>
       </div>
 
-      <NodeInspector nodeId={selectedNodeId} />
+      <NodeInspector
+        nodeId={selectedNodeId}
+        nodes={nodes}
+        setNodes={setNodes}
+        setEdges={setEdges}
+        onNodeDeleted={handleNodeDeleted}
+      />
     </div>
   );
 }

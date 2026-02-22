@@ -1,25 +1,49 @@
 'use client';
 
-import { useCallback } from 'react';
-import { useReactFlow } from 'reactflow';
+import Image from 'next/image';
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
+import { Edge, Node } from 'reactflow';
 import { StageData, NODE_CATEGORY_CONFIG } from '@/types';
 import { getResolvedStageIconName, renderStageIcon } from '@/lib/stageIcons';
+import {
+  createNodeImageAsset,
+  formatBytes,
+  MAX_NODE_IMAGE_BYTES,
+} from '@/lib/nodeImage';
 import { IconPickerField } from './node-inspector/IconPickerField';
 import { NodeInspectorEmptyState } from './node-inspector/NodeInspectorEmptyState';
 import { TextAreaField, TextField, ToggleField } from './node-inspector/Fields';
 
 interface NodeInspectorProps {
   nodeId: string | null;
+  nodes: Node<StageData>[];
+  setNodes: Dispatch<SetStateAction<Node<StageData>[]>>;
+  setEdges: Dispatch<SetStateAction<Edge[]>>;
+  onNodeDeleted?: (id: string) => void;
 }
 
-export function NodeInspector({ nodeId }: NodeInspectorProps) {
-  const { getNode, setNodes, deleteElements, getEdges } = useReactFlow();
+export function NodeInspector({
+  nodeId,
+  nodes,
+  setNodes,
+  setEdges,
+  onNodeDeleted,
+}: NodeInspectorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
 
-  const node = nodeId ? getNode(nodeId) : null;
+  const node = nodeId ? nodes.find((n) => n.id === nodeId) ?? null : null;
   const data: StageData | null = node ? (node.data as StageData) : null;
   const category = data?.category ?? 'consideration';
   const catConfig = data ? NODE_CATEGORY_CONFIG[category] : null;
   const resolvedIconKey = data ? getResolvedStageIconName(data) : null;
+
+  useEffect(() => {
+    setImageError(null);
+    setIsUploadingImage(false);
+  }, [nodeId]);
 
   const updateData = useCallback(
     (partial: Partial<StageData>) => {
@@ -34,16 +58,53 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
   );
 
   const updateParam = (key: string, value: string | number | boolean) => {
-    if (!data) return;
-    updateData({ params: { ...(data.params ?? {}), [key]: value } });
+    if (!nodeId) return;
+    setNodes((nds) =>
+      nds.map((n) => {
+        if (n.id !== nodeId) return n;
+        const current = n.data as StageData;
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            params: { ...(current.params ?? {}), [key]: value },
+          },
+        };
+      })
+    );
   };
 
   const handleDelete = () => {
     if (!nodeId) return;
-    const edges = getEdges().filter(
-      (e) => e.source === nodeId || e.target === nodeId
-    );
-    deleteElements({ nodes: [{ id: nodeId }], edges });
+    setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+    setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+    onNodeDeleted?.(nodeId);
+  };
+
+  const openImagePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !nodeId) return;
+
+    setImageError(null);
+    setIsUploadingImage(true);
+    try {
+      const image = await createNodeImageAsset(file);
+      updateData({ image });
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : 'Image upload failed.');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const removeImage = () => {
+    updateData({ image: null });
+    setImageError(null);
   };
 
   if (!data || !catConfig) {
@@ -118,6 +179,72 @@ export function NodeInspector({ nodeId }: NodeInspectorProps) {
               onChange={(v) => updateData({ description: v })}
               rows={2}
             />
+          </div>
+        </section>
+
+        <section>
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-white/20">
+            Media
+          </p>
+          <div className="space-y-2">
+            {data.image?.src ? (
+              <div className="overflow-hidden rounded-lg border border-neutral-300 bg-neutral-100 dark:border-white/10 dark:bg-white/5">
+                <Image
+                  src={data.image.src}
+                  alt={data.title}
+                  width={data.image.width}
+                  height={data.image.height}
+                  unoptimized
+                  className="h-28 w-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="flex h-20 items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-neutral-100 text-[11px] text-neutral-500 dark:border-white/10 dark:bg-white/5 dark:text-white/30">
+                No image uploaded
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={openImagePicker}
+                disabled={isUploadingImage}
+                className="rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-[11px] font-medium text-neutral-700 transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
+              >
+                {isUploadingImage ? 'Processing...' : 'Upload image'}
+              </button>
+              {data.image?.src && (
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="rounded-lg px-2 py-1.5 text-[11px] font-medium text-red-600 transition-colors hover:bg-red-500/15 dark:text-red-400 dark:hover:bg-red-500/20"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+
+            <p className="text-[10px] text-neutral-500 dark:text-white/25">
+              Max stored size: {formatBytes(MAX_NODE_IMAGE_BYTES)} (auto resized/compressed).
+            </p>
+
+            {data.image?.src && (
+              <p className="text-[10px] text-neutral-500 dark:text-white/25">
+                {data.image.name} · {formatBytes(data.image.bytes)} · {data.image.width}x{data.image.height}
+              </p>
+            )}
+
+            {imageError && (
+              <p className="text-[10px] text-red-600 dark:text-red-400">{imageError}</p>
+            )}
           </div>
         </section>
 

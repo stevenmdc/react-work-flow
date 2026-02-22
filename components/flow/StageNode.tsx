@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useCallback } from 'react';
 import { NodeProps, Handle, Position, useReactFlow } from 'reactflow';
 import { StageData, NODE_CATEGORY_CONFIG } from '@/types';
@@ -105,6 +106,19 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
         <p className="mb-3 line-clamp-2 text-[11px] leading-snug text-neutral-600 dark:text-white/40">
           {data.description}
         </p>
+
+        {data.image?.src && (
+          <div className="overflow-hidden rounded-md border border-neutral-300 bg-neutral-100 dark:border-white/10 dark:bg-white/5">
+            <Image
+              src={data.image.src}
+              alt={data.title}
+              width={data.image.width}
+              height={data.image.height}
+              unoptimized
+              className="h-20 w-full object-cover"
+            />
+          </div>
+        )}
       </div>
 
       {/* Handles out */}

@@ -3,6 +3,15 @@ import { Edge, Node } from 'reactflow';
 export type StageParamValue = string | number | boolean;
 export type StageParams = Record<string, StageParamValue>;
 
+export interface StageImageAsset {
+  src: string;
+  name: string;
+  mimeType: string;
+  bytes: number;
+  width: number;
+  height: number;
+}
+
 export type NodeCategory =
   | 'awareness'
   | 'interest'
@@ -18,6 +27,7 @@ export interface StageData {
   category?: NodeCategory;
   icon?: StageIconKey;
   params?: StageParams;
+  image?: StageImageAsset | null;
 }
 
 export type StageNode = Node<StageData>;
