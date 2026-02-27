@@ -43,6 +43,7 @@ const INITIAL_NODES: Node<StageData>[] = [
       category: 'awareness',
       icon: 'Megaphone',
       params: { channel: 'Paid social' },
+      badges: ['Top funnel'],
     },
   },
   {
@@ -55,6 +56,7 @@ const INITIAL_NODES: Node<StageData>[] = [
       category: 'interest',
       icon: 'Search',
       params: { touchpoint: 'Website' },
+      badges: ['Engagement'],
     },
   },
   {
@@ -67,6 +69,7 @@ const INITIAL_NODES: Node<StageData>[] = [
       category: 'consideration',
       icon: 'Scale',
       params: { proof: 'Testimonials' },
+      badges: ['Evaluation'],
     },
   },
   {
@@ -79,6 +82,7 @@ const INITIAL_NODES: Node<StageData>[] = [
       category: 'intent',
       icon: 'Target',
       params: { signal: 'Demo request' },
+      badges: ['High intent'],
     },
   },
   {
@@ -91,6 +95,7 @@ const INITIAL_NODES: Node<StageData>[] = [
       category: 'purchase',
       icon: 'ShoppingCart',
       params: { conversion: 'Checkout complete' },
+      badges: ['Conversion'],
     },
   },
 ];
@@ -271,6 +276,7 @@ function FlowEditorInner() {
         category: 'awareness',
         icon: getDefaultStageIcon('awareness'),
         params: {},
+        badges: [],
       },
     };
     setNodes((nds) => nds.concat(newNode));

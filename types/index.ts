@@ -27,6 +27,7 @@ export interface StageData {
   category?: NodeCategory;
   icon?: StageIconKey;
   params?: StageParams;
+  badges?: string[];
   image?: StageImageAsset | null;
 }
 
@@ -79,6 +80,7 @@ export const NODE_TEMPLATES: NodeTemplate[] = [
       category: 'awareness',
       icon: 'Megaphone',
       params: { channel: 'Social + Search' },
+      badges: ['Top funnel'],
     },
   },
   {
@@ -93,6 +95,7 @@ export const NODE_TEMPLATES: NodeTemplate[] = [
       category: 'interest',
       icon: 'Search',
       params: { contentType: 'Feature page' },
+      badges: ['Engagement'],
     },
   },
   {
@@ -107,6 +110,7 @@ export const NODE_TEMPLATES: NodeTemplate[] = [
       category: 'consideration',
       icon: 'Scale',
       params: { proof: 'Case studies + Reviews' },
+      badges: ['Evaluation'],
     },
   },
   {
@@ -121,6 +125,7 @@ export const NODE_TEMPLATES: NodeTemplate[] = [
       category: 'intent',
       icon: 'Target',
       params: { trigger: 'Demo request' },
+      badges: ['High intent'],
     },
   },
   {
@@ -135,6 +140,7 @@ export const NODE_TEMPLATES: NodeTemplate[] = [
       category: 'purchase',
       icon: 'ShoppingCart',
       params: { conversionGoal: 'Order completed' },
+      badges: ['Conversion'],
     },
   },
 ];

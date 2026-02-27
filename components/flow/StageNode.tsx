@@ -13,6 +13,7 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
 
   const category = data.category ?? 'consideration';
   const catConfig = NODE_CATEGORY_CONFIG[category];
+  const badges = (data.badges ?? []).map((badge) => badge.trim()).filter(Boolean);
 
   // ── Proper React Flow data update (no direct mutation) ──────────────────────
   const updateNodeData = useCallback(
@@ -106,6 +107,24 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
         <p className="mb-3 line-clamp-2 text-[11px] leading-snug text-neutral-600 dark:text-white/40">
           {data.description}
         </p>
+
+        {badges.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {badges.slice(0, 4).map((badge) => (
+              <span
+                key={badge}
+                className="rounded-full border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600 dark:border-white/10 dark:bg-white/5 dark:text-white/60"
+              >
+                {badge}
+              </span>
+            ))}
+            {badges.length > 4 && (
+              <span className="rounded-full border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-500 dark:border-white/10 dark:bg-white/5 dark:text-white/40">
+                +{badges.length - 4}
+              </span>
+            )}
+          </div>
+        )}
 
         {data.image?.src && (
           <div className="overflow-hidden rounded-md border border-neutral-300 bg-neutral-100 dark:border-white/10 dark:bg-white/5">

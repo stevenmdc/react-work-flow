@@ -13,7 +13,7 @@ import {
 } from '@/lib/nodeImage';
 import { IconPickerField } from './node-inspector/IconPickerField';
 import { NodeInspectorEmptyState } from './node-inspector/NodeInspectorEmptyState';
-import { TextAreaField, TextField, ToggleField } from './node-inspector/Fields';
+import { BadgeListField, TextAreaField, TextField, ToggleField } from './node-inspector/Fields';
 
 interface NodeInspectorProps {
   nodeId: string | null;
@@ -112,6 +112,7 @@ export function NodeInspector({
   }
 
   const params = data.params ?? {};
+  const badges = data.badges ?? [];
 
   return (
     <aside className="relative z-30 flex h-full w-64 flex-col overflow-visible border-l border-neutral-300 bg-white/90 backdrop-blur-sm dark:border-white/5 dark:bg-[#0a0c12]">
@@ -178,6 +179,12 @@ export function NodeInspector({
               value={data.description}
               onChange={(v) => updateData({ description: v })}
               rows={2}
+            />
+            <BadgeListField
+              label="Badges"
+              value={badges}
+              onChange={(v) => updateData({ badges: v })}
+              placeholder="Ex: Top funnel"
             />
           </div>
         </section>
