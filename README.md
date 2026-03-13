@@ -1,5 +1,7 @@
 # Customer Journey Flow
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Customer Journey Flow is a visual editor to design and iterate customer journey stages.
 It is built with Next.js (App Router) and React Flow.
 
@@ -118,4 +120,8 @@ npm run build
 
 ## License
 
-Private project (no license file provided).
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Contact: stevenmadec@live.fr
