@@ -8,11 +8,11 @@ It is built with Next.js (App Router) and React Flow.
 ## What It Does
 
 - Start from a default journey (Awareness → Purchase)
-- Drag and drop stage templates from the left sidebar
 - Connect stages with animated edges
 - Reconnect or delete links
 - Edit node content in a right-side inspector
 - Pick Lucide icons for each node (searchable icon picker)
+- Adjust node appearance controls from the inspector
 - Reset to the default journey on page refresh
 - Switch between light and dark themes
 
@@ -38,7 +38,7 @@ components/
   flow/
     FlowEditor.tsx
     StageNode.tsx
-    NodesSidebar.tsx
+    GlowStepEdge.tsx
     NodeInspector.tsx
     node-inspector/
       Fields.tsx
@@ -49,7 +49,9 @@ components/
     ThemeToggle.tsx
 
 lib/
+  constants.ts
   flowUtils.ts
+  nodeImage.ts
   stageIcons.ts
 
 types/
@@ -86,6 +88,7 @@ npm run start  # run production server
 - Double-click a node title to edit it inline.
 - Click a node to edit details in the inspector.
 - Use the icon picker (`Search icon`) to select from Lucide icons.
+- Use inspector controls to tune node visuals and metadata.
 - Click an edge to select it, then delete with:
   - `Delete` / `Backspace`
   - double-click on edge
@@ -113,8 +116,6 @@ npm run build
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 Contact: stevenmadec@live.fr
