@@ -1,11 +1,12 @@
 'use client';
 
 // components/flow/FlowEditor.tsx
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import ReactFlow, {
   Background,
   Controls,
   MiniMap,
+  MarkerType,
   addEdge,
   reconnectEdge,
   useNodesState,
@@ -23,7 +24,6 @@ import 'reactflow/dist/style.css';
 import { useTheme } from 'next-themes';
 
 import { StageNode } from './StageNode';
-import { NodesSidebar } from './NodesSidebar';
 import { NodeInspector } from './NodeInspector';
 import { GlowStepEdge } from './GlowStepEdge';
 import { NODE_TEMPLATES, StageData, NODE_CATEGORY_CONFIG } from '@/types';
@@ -101,37 +101,38 @@ const INITIAL_NODES: Node<StageData>[] = [
 ];
 
 const INITIAL_EDGES: Edge[] = [
-  { id: 'e-awareness-interest', source: 'awareness', target: 'interest', type: 'glow' },
-  { id: 'e-interest-consideration', source: 'interest', target: 'consideration', type: 'glow' },
-  { id: 'e-consideration-intent', source: 'consideration', target: 'intent', type: 'glow' },
-  { id: 'e-intent-purchase', source: 'intent', target: 'purchase', type: 'glow' },
+  {
+    id: 'e-awareness-interest',
+    source: 'awareness',
+    target: 'interest',
+    type: 'glow',
+    markerEnd: { type: MarkerType.ArrowClosed },
+  },
+  {
+    id: 'e-interest-consideration',
+    source: 'interest',
+    target: 'consideration',
+    type: 'glow',
+    markerEnd: { type: MarkerType.ArrowClosed },
+  },
+  {
+    id: 'e-consideration-intent',
+    source: 'consideration',
+    target: 'intent',
+    type: 'glow',
+    markerEnd: { type: MarkerType.ArrowClosed },
+  },
+  {
+    id: 'e-intent-purchase',
+    source: 'intent',
+    target: 'purchase',
+    type: 'glow',
+    markerEnd: { type: MarkerType.ArrowClosed },
+  },
 ];
 
 let nodeIdCounter = 100;
-const FLOW_STORAGE_KEY = 'customer-journey-flow:flow:v1';
 const emptySubscribe = () => () => {};
-
-interface PersistedFlow {
-  nodes: Node<StageData>[];
-  edges: Edge[];
-}
-
-function isPersistedFlow(value: unknown): value is PersistedFlow {
-  if (!value || typeof value !== 'object') return false;
-  const candidate = value as { nodes?: unknown; edges?: unknown };
-  return Array.isArray(candidate.nodes) && Array.isArray(candidate.edges);
-}
-
-function getMaxGeneratedNodeId(nodes: Node<StageData>[]) {
-  return nodes.reduce((maxId, node) => {
-    const match = /^node_(\d+)$/.exec(node.id);
-    if (!match) return maxId;
-
-    const parsed = Number.parseInt(match[1], 10);
-    if (Number.isNaN(parsed)) return maxId;
-    return Math.max(maxId, parsed);
-  }, 100);
-}
 
 function useIsMounted() {
   return useSyncExternalStore(emptySubscribe, () => true, () => false);
@@ -145,45 +146,18 @@ function FlowEditorInner() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(INITIAL_EDGES);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
-  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
 
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(FLOW_STORAGE_KEY);
-      if (!raw) return;
-
-      const parsed: unknown = JSON.parse(raw);
-      if (!isPersistedFlow(parsed)) return;
-
-      setNodes(parsed.nodes);
-      setEdges(parsed.edges);
-      nodeIdCounter = getMaxGeneratedNodeId(parsed.nodes);
-    } catch (error) {
-      console.error('Failed to restore flow from localStorage', error);
-    } finally {
-      setHasLoadedFromStorage(true);
-    }
-  }, [setEdges, setNodes]);
-
-  useEffect(() => {
-    if (!hasLoadedFromStorage) return;
-
-    try {
-      window.localStorage.setItem(
-        FLOW_STORAGE_KEY,
-        JSON.stringify({ nodes, edges } satisfies PersistedFlow)
-      );
-      nodeIdCounter = Math.max(nodeIdCounter, getMaxGeneratedNodeId(nodes));
-    } catch (error) {
-      console.error('Failed to save flow to localStorage', error);
-    }
-  }, [edges, hasLoadedFromStorage, nodes]);
-
   const onConnect = useCallback(
     (params: Connection) =>
-      setEdges((eds) => addEdge({ ...params, type: 'glow', animated: false, updatable: true }, eds)),
+      setEdges((eds) => addEdge({
+        ...params,
+        type: 'glow',
+        animated: false,
+        updatable: true,
+        markerEnd: { type: MarkerType.ArrowClosed },
+      }, eds)),
     [setEdges]
   );
 
@@ -301,6 +275,7 @@ function FlowEditorInner() {
           strokeWidth: edge.style?.strokeWidth ?? 1.8,
           strokeDasharray: 'none',
         },
+        markerEnd: edge.markerEnd ?? { type: MarkerType.ArrowClosed },
       })),
     [beamColor, edgeStrokeColor, edges]
   );
@@ -311,8 +286,6 @@ function FlowEditorInner() {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-100 dark:bg-[#0a0c12]">
-      <NodesSidebar />
-
       <div className="flex-1 h-full relative" ref={reactFlowWrapper}>
         <ReactFlow
           nodes={nodes}
@@ -340,6 +313,7 @@ function FlowEditorInner() {
             style: { stroke: edgeStrokeColor, strokeWidth: 1.8 },
             animated: false,
             updatable: true,
+            markerEnd: { type: MarkerType.ArrowClosed },
           }}
           connectionLineType={ConnectionLineType.Step}
           connectionLineStyle={{ stroke: edgeStrokeColor, strokeWidth: 1.8 }}

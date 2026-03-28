@@ -13,7 +13,14 @@ import {
 } from '@/lib/nodeImage';
 import { IconPickerField } from './node-inspector/IconPickerField';
 import { NodeInspectorEmptyState } from './node-inspector/NodeInspectorEmptyState';
-import { BadgeListField, TextAreaField, TextField, ToggleField } from './node-inspector/Fields';
+import {
+  BadgeListField,
+  ColorField,
+  SelectField,
+  TextAreaField,
+  TextField,
+  ToggleField,
+} from './node-inspector/Fields';
 
 interface NodeInspectorProps {
   nodeId: string | null;
@@ -74,6 +81,26 @@ export function NodeInspector({
     );
   };
 
+  const updateAppearance = useCallback(
+    (partial: NonNullable<StageData['appearance']>) => {
+      if (!nodeId) return;
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (n.id !== nodeId) return n;
+          const current = n.data as StageData;
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              appearance: { ...(current.appearance ?? {}), ...partial },
+            },
+          };
+        })
+      );
+    },
+    [nodeId, setNodes]
+  );
+
   const handleDelete = () => {
     if (!nodeId) return;
     setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
@@ -113,6 +140,17 @@ export function NodeInspector({
 
   const params = data.params ?? {};
   const badges = data.badges ?? [];
+  const appearance = data.appearance ?? {};
+  const backgroundColor = appearance.backgroundColor ?? catConfig.accent;
+  const contentColor = appearance.contentColor ?? 'black';
+  const size = appearance.size ?? 'md';
+  const titleSize = appearance.titleSize ?? 'lg';
+  const iconSize = appearance.iconSize ?? 'lg';
+  const showIcon = appearance.showIcon ?? true;
+  const showTitle = appearance.showTitle ?? true;
+  const showDescription = appearance.showDescription ?? true;
+  const showBadges = appearance.showBadges ?? true;
+  const showImage = appearance.showImage ?? true;
 
   return (
     <aside className="relative z-30 flex h-full w-64 flex-col overflow-visible border-l border-neutral-300 bg-white/90 backdrop-blur-sm dark:border-white/5 dark:bg-[#0a0c12]">
@@ -166,14 +204,6 @@ export function NodeInspector({
               value={data.title}
               onChange={(v) => updateData({ title: v })}
             />
-            {resolvedIconKey && (
-              <IconPickerField
-                value={resolvedIconKey}
-                category={category}
-                accentColor={catConfig.accent}
-                onChange={(v) => updateData({ icon: v })}
-              />
-            )}
             <TextAreaField
               label="Description"
               value={data.description}
@@ -185,6 +215,96 @@ export function NodeInspector({
               value={badges}
               onChange={(v) => updateData({ badges: v })}
               placeholder="Ex: Top funnel"
+            />
+          </div>
+        </section>
+
+        <section>
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-white/20">
+            Appearance
+          </p>
+          <div className="space-y-3">
+            <ColorField
+              label="Card background"
+              value={backgroundColor}
+              onChange={(v) => updateAppearance({ backgroundColor: v })}
+              onReset={() => updateAppearance({ backgroundColor: undefined })}
+            />
+            <SelectField
+              label="Content color"
+              value={contentColor}
+              onChange={(v) => updateAppearance({ contentColor: v as 'black' | 'white' })}
+              options={[
+                { label: 'Black', value: 'black' },
+                { label: 'White', value: 'white' },
+              ]}
+            />
+            <SelectField
+              label="Card size"
+              value={size}
+              onChange={(v) => updateAppearance({ size: v as 'sm' | 'md' | 'lg' | 'xl' | '2xl' })}
+              options={[
+                { label: 'Small', value: 'sm' },
+                { label: 'Medium', value: 'md' },
+                { label: 'Large', value: 'lg' },
+                { label: 'XL', value: 'xl' },
+                { label: '2XL', value: '2xl' },
+              ]}
+            />
+            <SelectField
+              label="Title size"
+              value={titleSize}
+              onChange={(v) => updateAppearance({ titleSize: v as 'lg' | 'xl' | '2xl' })}
+              options={[
+                { label: 'Large', value: 'lg' },
+                { label: 'XL', value: 'xl' },
+                { label: '2XL', value: '2xl' },
+              ]}
+            />
+            <ToggleField
+              label="Show icon"
+              value={showIcon}
+              onChange={(v) => updateAppearance({ showIcon: v })}
+            />
+            {showIcon && (
+              <SelectField
+                label="Icon size"
+                value={iconSize}
+                onChange={(v) => updateAppearance({ iconSize: v as 'lg' | 'xl' | '2xl' })}
+                options={[
+                  { label: 'Large', value: 'lg' },
+                  { label: 'XL', value: 'xl' },
+                  { label: '2XL', value: '2xl' },
+                ]}
+              />
+            )}
+            {resolvedIconKey && showIcon && (
+              <IconPickerField
+                value={resolvedIconKey}
+                category={category}
+                accentColor={catConfig.accent}
+                onChange={(v) => updateData({ icon: v })}
+              />
+            )}
+            <ToggleField
+              label="Show title"
+              value={showTitle}
+              onChange={(v) => updateAppearance({ showTitle: v })}
+            />
+            <ToggleField
+              label="Show description"
+              value={showDescription}
+              onChange={(v) => updateAppearance({ showDescription: v })}
+            />
+            <ToggleField
+              label="Show badges"
+              value={showBadges}
+              onChange={(v) => updateAppearance({ showBadges: v })}
+            />
+            <ToggleField
+              label="Show image"
+              value={showImage}
+              onChange={(v) => updateAppearance({ showImage: v })}
             />
           </div>
         </section>

@@ -26,6 +26,25 @@ interface BadgeListFieldProps {
   placeholder?: string;
 }
 
+interface SelectFieldOption {
+  label: string;
+  value: string;
+}
+
+interface SelectFieldProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: SelectFieldOption[];
+}
+
+interface ColorFieldProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  onReset?: () => void;
+}
+
 export function TextField({ label, value, onChange }: TextFieldProps) {
   return (
     <div>
@@ -73,6 +92,59 @@ export function ToggleField({ label, value, onChange }: ToggleFieldProps) {
           }`}
         />
       </button>
+    </div>
+  );
+}
+
+export function SelectField({ label, value, onChange, options }: SelectFieldProps) {
+  return (
+    <div>
+      <label className="mb-1 block text-[10px] uppercase tracking-wider text-neutral-500 dark:text-white/30">
+        {label}
+      </label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border border-neutral-300 bg-white/80 px-3 py-2 text-xs text-neutral-700 outline-none transition-colors focus:border-neutral-500 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:focus:border-white/30"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+export function ColorField({ label, value, onChange, onReset }: ColorFieldProps) {
+  return (
+    <div>
+      <label className="mb-1 block text-[10px] uppercase tracking-wider text-neutral-500 dark:text-white/30">
+        {label}
+      </label>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-10 w-12 cursor-pointer rounded-lg border border-neutral-300 bg-white p-1 dark:border-white/10 dark:bg-white/5"
+        />
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full rounded-lg border border-neutral-300 bg-white/80 px-3 py-2 text-xs text-neutral-700 outline-none transition-colors focus:border-neutral-500 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:focus:border-white/30"
+        />
+        {onReset && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-[11px] font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
+          >
+            Reset
+          </button>
+        )}
+      </div>
     </div>
   );
 }

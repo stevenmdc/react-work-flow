@@ -13,7 +13,7 @@ It is built with Next.js (App Router) and React Flow.
 - Reconnect or delete links
 - Edit node content in a right-side inspector
 - Pick Lucide icons for each node (searchable icon picker)
-- Persist graph data in `localStorage`
+- Reset to the default journey on page refresh
 - Switch between light and dark themes
 
 ## Tech Stack
@@ -94,15 +94,8 @@ npm run start  # run production server
 
 ## Persistence
 
-Flow state is automatically saved to browser `localStorage`.
-
-Storage key:
-
-```text
-customer-journey-flow:flow:v1
-```
-
-To reset data quickly, clear this key in DevTools.
+Flow state is not persisted in browser storage.
+Refreshing the page restores the default journey graph.
 
 ## Styling & Theme
 

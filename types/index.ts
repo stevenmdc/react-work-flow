@@ -20,6 +20,23 @@ export type NodeCategory =
   | 'purchase';
 
 export type StageIconKey = string;
+export type StageContentColor = 'black' | 'white';
+export type StageCardSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+export type StageTitleSize = 'lg' | 'xl' | '2xl';
+export type StageIconSize = 'lg' | 'xl' | '2xl';
+
+export interface StageAppearance {
+  backgroundColor?: string;
+  contentColor?: StageContentColor;
+  size?: StageCardSize;
+  titleSize?: StageTitleSize;
+  iconSize?: StageIconSize;
+  showIcon?: boolean;
+  showTitle?: boolean;
+  showDescription?: boolean;
+  showBadges?: boolean;
+  showImage?: boolean;
+}
 
 export interface StageData {
   title: string;
@@ -29,6 +46,7 @@ export interface StageData {
   params?: StageParams;
   badges?: string[];
   image?: StageImageAsset | null;
+  appearance?: StageAppearance;
 }
 
 export type StageNode = Node<StageData>;
