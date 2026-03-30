@@ -56,7 +56,7 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
   const showBadges = appearance.showBadges ?? true;
   const showImage = appearance.showImage ?? true;
   const cardBackground = toOpaqueColor(customBackgroundColor ?? catConfig.accent);
-  const selectedBorderColor = customBackgroundColor ?? '#3b82f6';
+  const selectedBorderColor = '#3b82f6';
   const contentTextClass = contentColor === 'white' ? 'text-white' : 'text-black';
   const descriptionTextClass = contentColor === 'white' ? 'text-white/80' : 'text-neutral-700';
   const sizeClasses = {

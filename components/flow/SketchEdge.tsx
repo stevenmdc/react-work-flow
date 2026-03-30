@@ -97,6 +97,7 @@ export const SketchEdge = memo(function SketchEdge({
   const labelY = getBezierPoint(0.5, sourceY, controlY1, controlY2, targetY);
   const baseStrokeColor = style?.stroke ?? '#334155b3';
   const baseStrokeWidth = Number(style?.strokeWidth ?? 2.9);
+  const interactionWidth = Math.max(baseStrokeWidth + 16, 20);
   const sketchMarkerId = `sketch-arrow-${id}`;
   const sketchMarkerEnd = markerEnd ? `url(#${sketchMarkerId})` : undefined;
 
@@ -122,6 +123,15 @@ export const SketchEdge = memo(function SketchEdge({
           />
         </marker>
       </defs>
+      <path
+        d={mainPath}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={interactionWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ pointerEvents: 'stroke' }}
+      />
       <motion.path
         d={mainPath}
         fill="none"
@@ -130,6 +140,7 @@ export const SketchEdge = memo(function SketchEdge({
         strokeLinecap="round"
         strokeLinejoin="round"
         markerEnd={sketchMarkerEnd}
+        pointerEvents="none"
         opacity={0.92}
         initial={{ pathLength: 0, opacity: 0 }}
         animate={{ pathLength: 1, opacity: 0.92 }}

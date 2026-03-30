@@ -42,6 +42,7 @@ export const GlowStepEdge = memo(function GlowStepEdge({
   const delay = data?.delay ?? 0.35;
   const baseStrokeWidth = Number(style?.strokeWidth ?? 1.8);
   const baseStrokeColor = style?.stroke ?? '#334155b3';
+  const interactionWidth = Math.max(baseStrokeWidth + 18, 22);
 
   return (
     <g>
@@ -49,6 +50,7 @@ export const GlowStepEdge = memo(function GlowStepEdge({
         id={id}
         path={edgePath}
         markerEnd={markerEnd}
+        interactionWidth={interactionWidth}
         style={{
           ...style,
           stroke: baseStrokeColor,
@@ -78,6 +80,7 @@ export const GlowStepEdge = memo(function GlowStepEdge({
         stroke={`url(#${gradientId})`}
         strokeWidth={baseStrokeWidth + 0.8}
         strokeLinecap="round"
+        pointerEvents="none"
         style={{ filter: `drop-shadow(0 0 8px ${beamColor})` }}
         initial={{ pathLength: 0.2, pathOffset: 0 }}
         animate={{ pathOffset: [0, 1.2] }}

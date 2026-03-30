@@ -45,6 +45,7 @@ type AutoHandleIds = {
   sourceHandle: string;
   targetHandle: string;
 };
+type RandomStageAppearance = NonNullable<StageData["appearance"]>;
 
 const INITIAL_NODES: Node<StageData>[] = [
   {
@@ -150,6 +151,22 @@ const INITIAL_EDGES: Edge[] = [
 
 let nodeIdCounter = 100;
 const emptySubscribe = () => () => {};
+const RANDOM_STAGE_APPEARANCES: RandomStageAppearance[] = [
+  { backgroundColor: "#38bdf8", contentColor: "black" },
+  { backgroundColor: "#fda4af", contentColor: "black" },
+  { backgroundColor: "#facc15", contentColor: "black" },
+  { backgroundColor: "#34d399", contentColor: "black" },
+  { backgroundColor: "#a78bfa", contentColor: "black" },
+  { backgroundColor: "#fb7185", contentColor: "black" },
+  { backgroundColor: "#2dd4bf", contentColor: "black" },
+  { backgroundColor: "#f97316", contentColor: "black" },
+];
+
+function getRandomStageAppearance() {
+  return RANDOM_STAGE_APPEARANCES[
+    Math.floor(Math.random() * RANDOM_STAGE_APPEARANCES.length)
+  ];
+}
 
 function getAutoHandleIds(
   sourceNode: Node<StageData>,
@@ -378,6 +395,7 @@ function FlowEditorInner() {
 
   // ── Add node button ─────────────────────────────────────────────────────────
   const addDefaultNode = () => {
+    const appearance = getRandomStageAppearance();
     const position = {
       x: 200 + Math.random() * 300,
       y: 150 + Math.random() * 200,
@@ -393,6 +411,7 @@ function FlowEditorInner() {
         icon: getDefaultStageIcon("awareness"),
         params: {},
         badges: [],
+        appearance,
       },
     };
     setNodes((nds) => nds.concat(newNode));
