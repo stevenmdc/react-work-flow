@@ -11,6 +11,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-hand: var(--font-patrick-hand);
+  --font-script: var(--font-caveat);
 }
 
 .dark {
@@ -22,4 +24,16 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.font-flow-default {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.font-flow-patrick {
+  font-family: var(--font-patrick-hand), var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.font-flow-caveat {
+  font-family: var(--font-caveat), var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }

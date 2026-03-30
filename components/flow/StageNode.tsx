@@ -7,6 +7,35 @@ import { Trash2 } from 'lucide-react';
 import { StageData, NODE_CATEGORY_CONFIG } from '@/types';
 import { renderStageIcon } from '@/lib/stageIcons';
 
+function toOpaqueColor(color: string) {
+  const value = color.trim();
+
+  if (/^#[0-9a-fA-F]{4}$/.test(value)) {
+    return `#${value[1]}${value[1]}${value[2]}${value[2]}${value[3]}${value[3]}`;
+  }
+
+  if (/^#[0-9a-fA-F]{8}$/.test(value)) {
+    return value.slice(0, 7);
+  }
+
+  const rgbaMatch = value.match(
+    /^rgba\(\s*([^,\s]+)\s*,\s*([^,\s]+)\s*,\s*([^,\s]+)\s*,\s*[^)]+\)$/i
+  );
+  if (rgbaMatch) {
+    return `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`;
+  }
+
+  const hslaMatch = value.match(/^hsla\(\s*([^)]+),\s*[^)]+\)$/i);
+  if (hslaMatch) {
+    return `hsl(${hslaMatch[1]})`;
+  }
+
+  return value;
+}
+
+const sharedHandleClassName =
+  '!h-4 !w-4 !rounded-full !border-2 !border-slate-100 !opacity-0 !transition-opacity !duration-150 group-hover:!opacity-100 dark:!border-[#0f1117]';
+
 export function StageNode({ data, id, selected }: NodeProps<StageData>) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState(data.title);
@@ -26,7 +55,7 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
   const showDescription = appearance.showDescription ?? true;
   const showBadges = appearance.showBadges ?? true;
   const showImage = appearance.showImage ?? true;
-  const cardBackground = customBackgroundColor ?? `${catConfig.accent}A8`;
+  const cardBackground = toOpaqueColor(customBackgroundColor ?? catConfig.accent);
   const selectedBorderColor = customBackgroundColor ?? '#3b82f6';
   const contentTextClass = contentColor === 'white' ? 'text-white' : 'text-black';
   const descriptionTextClass = contentColor === 'white' ? 'text-white/80' : 'text-neutral-700';
@@ -88,8 +117,10 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
       className={`group relative ${currentSize.width} rounded-lg border shadow-xl transition-all duration-150`}
       style={{
         backgroundColor: cardBackground,
-        borderColor: selected ? selectedBorderColor : 'transparent',
-        borderWidth: selected ? 3 : 0,
+        borderColor: 'transparent',
+        boxShadow: selected
+          ? `0 0 0 3px ${selectedBorderColor}, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)`
+          : undefined,
       }}
     >
       <button
@@ -104,18 +135,32 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
 
       {/* Handles in */}
       <Handle
-        type="target"
-        id="target-top"
+        type="source"
+        id="handle-top"
         position={Position.Top}
-        className="!h-4 !w-4 !-top-2 !rounded-full !border-2 !border-slate-100 !opacity-0 !transition-opacity !duration-150 group-hover:!opacity-100 dark:!border-[#0f1117]"
-        style={{ backgroundColor: catConfig.accent }}
+        className={`!-top-2 ${sharedHandleClassName}`}
+        style={{ left: '50%', backgroundColor: catConfig.accent }}
       />
       <Handle
-        type="target"
-        id="target-left"
+        type="source"
+        id="handle-left"
         position={Position.Left}
-        className="!h-4 !w-4 !-left-2 !rounded-full !border-2 !border-slate-100 !opacity-0 !transition-opacity !duration-150 group-hover:!opacity-100 dark:!border-[#0f1117]"
-        style={{ backgroundColor: catConfig.accent }}
+        className={`!-left-2 ${sharedHandleClassName}`}
+        style={{ top: '50%', backgroundColor: catConfig.accent }}
+      />
+      <Handle
+        type="source"
+        id="handle-right"
+        position={Position.Right}
+        className={`!-right-2 ${sharedHandleClassName}`}
+        style={{ top: '50%', backgroundColor: catConfig.accent }}
+      />
+      <Handle
+        type="source"
+        id="handle-bottom"
+        position={Position.Bottom}
+        className={`!-bottom-2 ${sharedHandleClassName}`}
+        style={{ left: '50%', backgroundColor: catConfig.accent }}
       />
 
       <div className={currentSize.padding}>
@@ -166,7 +211,7 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
             {badges.slice(0, 4).map((badge) => (
               <span
                 key={badge}
-                className="rounded-full border border-black bg-white px-2 py-0.5 text-[10px] font-medium text-black"
+                className="rounded-full border border-black/30 bg-white px-2 py-0.5 text-[10px] font-medium text-black"
               >
                 {badge}
               </span>
@@ -194,22 +239,6 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
           </div>
         )}
       </div>
-
-      {/* Handles out */}
-      <Handle
-        type="source"
-        id="source-right"
-        position={Position.Right}
-        className="!h-4 !w-4 !-right-2 !rounded-full !border-2 !border-slate-100 !opacity-0 !transition-opacity !duration-150 group-hover:!opacity-100 dark:!border-[#0f1117]"
-        style={{ backgroundColor: catConfig.accent }}
-      />
-      <Handle
-        type="source"
-        id="source-bottom"
-        position={Position.Bottom}
-        className="!h-4 !w-4 !-bottom-2 !rounded-full !border-2 !border-slate-100 !opacity-0 !transition-opacity !duration-150 group-hover:!opacity-100 dark:!border-[#0f1117]"
-        style={{ backgroundColor: catConfig.accent }}
-      />
     </div>
   );
 }

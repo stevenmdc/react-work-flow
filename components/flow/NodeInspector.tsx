@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Dispatch, SetStateAction } from 'react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Edge, Node } from 'reactflow';
 import { StageData, NODE_CATEGORY_CONFIG } from '@/types';
 import { getResolvedStageIconName, renderStageIcon } from '@/lib/stageIcons';
@@ -12,7 +13,6 @@ import {
   MAX_NODE_IMAGE_BYTES,
 } from '@/lib/nodeImage';
 import { IconPickerField } from './node-inspector/IconPickerField';
-import { NodeInspectorEmptyState } from './node-inspector/NodeInspectorEmptyState';
 import {
   BadgeListField,
   ColorField,
@@ -38,6 +38,7 @@ export function NodeInspector({
   onNodeDeleted,
 }: NodeInspectorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
 
@@ -50,6 +51,7 @@ export function NodeInspector({
   useEffect(() => {
     setImageError(null);
     setIsUploadingImage(false);
+    if (nodeId) setIsCollapsed(false);
   }, [nodeId]);
 
   const updateData = useCallback(
@@ -133,9 +135,89 @@ export function NodeInspector({
     updateData({ image: null });
     setImageError(null);
   };
+  const panelAccentColor = catConfig?.accent ?? '#94a3b8';
+
+  if (isCollapsed) {
+    return (
+      <aside
+        className="relative z-30 flex h-full w-14 flex-col items-center border-r border-neutral-300 bg-white/90 py-3 backdrop-blur-sm transition-[width] duration-200 dark:border-white/5 dark:bg-[#0a0c12]"
+        style={{ borderTopColor: panelAccentColor, borderTopWidth: 2 }}
+      >
+        <button
+          type="button"
+          onClick={() => setIsCollapsed(false)}
+          title="Open inspector"
+          className="mb-3 inline-flex h-8 w-8 items-center justify-center bg-white text-neutral-700 rounded-xl hover:bg-neutral-100 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
+        >
+          <PanelLeftOpen className="h-4 w-4" />
+        </button>
+
+        <div
+          className="mb-3 h-8 w-1 rounded-full"
+          style={{ backgroundColor: panelAccentColor }}
+        />
+
+        {resolvedIconKey && data ? (
+          <div
+            className="inline-flex h-9 w-9 items-center justify-center  bg-white/80 dark:border-white/10 dark:bg-white/5"
+            style={{ color: panelAccentColor }}
+            title={data.title}
+          >
+            {renderStageIcon(resolvedIconKey, category, {
+              size: 16,
+              strokeWidth: 2.2,
+            })}
+          </div>
+        ) : (
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-300 bg-white/80 text-base font-medium text-neutral-500 dark:border-white/10 dark:bg-white/5 dark:text-white/35">
+            n
+          </div>
+        )}
+      </aside>
+    );
+  }
 
   if (!data || !catConfig) {
-    return <NodeInspectorEmptyState />;
+    return (
+      <aside
+        className="relative z-30 flex h-full w-64 flex-col border-r border-neutral-300 bg-white/90 backdrop-blur-sm transition-[width] duration-200 dark:border-white/5 dark:bg-[#0a0c12]"
+        style={{ borderTopColor: panelAccentColor, borderTopWidth: 2 }}
+      >
+        <div className="flex items-center justify-end px-3 pt-3">
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(true)}
+            title="Collapse inspector"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-neutral-300 bg-white text-neutral-700 transition-colors hover:bg-neutral-100 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-200 dark:bg-white/5">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className="text-neutral-500 dark:text-white/20"
+            >
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+          </div>
+          <p className="text-xs font-medium text-neutral-700 dark:text-white/20">Select a node</p>
+          <p className="mt-1 text-[10px] text-neutral-500 dark:text-white/20">
+            Click any node on the canvas to inspect and edit its parameters
+          </p>
+        </div>
+      </aside>
+    );
   }
 
   const params = data.params ?? {};
@@ -153,10 +235,12 @@ export function NodeInspector({
   const showImage = appearance.showImage ?? true;
 
   return (
-    <aside className="relative z-30 flex h-full w-64 flex-col overflow-visible border-l border-neutral-300 bg-white/90 backdrop-blur-sm dark:border-white/5 dark:bg-[#0a0c12]">
+    <aside
+      className="relative z-30 flex h-full w-64 flex-col overflow-visible border-r border-neutral-300 bg-white/90 backdrop-blur-sm transition-[width] duration-200 dark:border-white/5 dark:bg-[#0a0c12]"
+      style={{ borderTopColor: panelAccentColor, borderTopWidth: 2 }}
+    >
       <div
         className="border-b border-neutral-300 px-4 pb-3 pt-4 dark:border-white/5"
-        style={{ borderTopColor: catConfig.accent, borderTopWidth: 2 }}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -178,17 +262,12 @@ export function NodeInspector({
             </div>
           </div>
           <button
-            onClick={handleDelete}
-            title="Delete node"
-            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-red-500/20 hover:text-red-500 dark:text-white/30 dark:hover:text-red-400"
+            type="button"
+            onClick={() => setIsCollapsed(true)}
+            title="Collapse inspector"
+            className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-neutral-200 hover:text-neutral-800 dark:text-white/30 dark:hover:bg-white/10 dark:hover:text-white/80"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-              <path d="M10 11v6M14 11v6" />
-              <path d="M9 6V4h6v2" />
-            </svg>
+            <PanelLeftClose className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -425,6 +504,26 @@ export function NodeInspector({
           <div className="rounded-lg border border-neutral-300 bg-neutral-100 px-3 py-2 font-mono text-[10px] text-neutral-600 dark:border-white/8 dark:bg-white/5 dark:text-white/40">
             ID: {nodeId}
           </div>
+        </section>
+
+        <section>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-white/20">
+            Danger
+          </p>
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/15"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+              <path d="M10 11v6M14 11v6" />
+              <path d="M9 6V4h6v2" />
+            </svg>
+            Delete node
+          </button>
         </section>
       </div>
     </aside>

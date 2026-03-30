@@ -3,11 +3,15 @@
 import { memo } from 'react';
 import { BaseEdge, EdgeProps, getSmoothStepPath } from 'reactflow';
 import { motion } from 'framer-motion';
+import { EdgeActionControls } from './EdgeActionControls';
 
 type GlowEdgeData = {
   beamColor?: string;
   duration?: number;
   delay?: number;
+  isInteractive?: boolean;
+  onReverse?: () => void;
+  onDelete?: () => void;
 };
 
 export const GlowStepEdge = memo(function GlowStepEdge({
@@ -22,7 +26,7 @@ export const GlowStepEdge = memo(function GlowStepEdge({
   style,
   data,
 }: EdgeProps<GlowEdgeData>) {
-  const [edgePath] = getSmoothStepPath({
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
@@ -83,6 +87,13 @@ export const GlowStepEdge = memo(function GlowStepEdge({
           ease: 'linear',
           repeatDelay: delay,
         }}
+      />
+      <EdgeActionControls
+        x={labelX}
+        y={labelY}
+        visible={Boolean(data?.isInteractive)}
+        onReverse={data?.onReverse}
+        onDelete={data?.onDelete}
       />
     </g>
   );
