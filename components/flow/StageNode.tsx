@@ -1,10 +1,15 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useCallback } from 'react';
+import { ReactNode, useState, useCallback } from 'react';
 import { NodeProps, Handle, Position, useReactFlow } from 'reactflow';
 import { Trash2 } from 'lucide-react';
-import { StageData, NODE_CATEGORY_CONFIG } from '@/types';
+import {
+  DEFAULT_STAGE_CONTENT_ORDER,
+  StageContentSection,
+  StageData,
+  NODE_CATEGORY_CONFIG,
+} from '@/types';
 import { renderStageIcon } from '@/lib/stageIcons';
 
 function toOpaqueColor(color: string) {
@@ -35,6 +40,12 @@ function toOpaqueColor(color: string) {
 
 const sharedHandleClassName =
   '!h-4 !w-4 !rounded-full !border-2 !border-slate-100 !opacity-0 !transition-opacity !duration-150 group-hover:!opacity-100 dark:!border-[#0f1117]';
+const fontClassNames = {
+  default: 'font-flow-default',
+  assistant: 'font-flow-assistant',
+  patrick: 'font-flow-patrick',
+  caveat: 'font-flow-caveat',
+} as const;
 
 export function StageNode({ data, id, selected }: NodeProps<StageData>) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -48,9 +59,22 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
   const customBackgroundColor = appearance.backgroundColor;
   const contentColor = appearance.contentColor ?? 'black';
   const cardSize = appearance.size ?? 'md';
-  const titleSize = appearance.titleSize ?? 'lg';
-  const iconSize = appearance.iconSize ?? 'lg';
-  const showIcon = appearance.showIcon ?? true;
+  const cardShape = appearance.cardShape ?? 'rectangle';
+  const titleSize =
+    appearance.titleSize === '6xl'
+      ? '6xl'
+      : appearance.titleSize === '4xl'
+        ? '4xl'
+        : appearance.titleSize ?? '2xl';
+  const iconSize =
+    appearance.iconSize === '6xl'
+      ? '6xl'
+      : appearance.iconSize === '4xl'
+        ? '4xl'
+        : appearance.iconSize ?? 'xl';
+  const fontFamily = appearance.fontFamily ?? 'default';
+  const contentOrder = appearance.contentOrder ?? DEFAULT_STAGE_CONTENT_ORDER;
+  const showIcon = appearance.showIcon ?? false;
   const showTitle = appearance.showTitle ?? true;
   const showDescription = appearance.showDescription ?? true;
   const showBadges = appearance.showBadges ?? true;
@@ -60,23 +84,48 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
   const contentTextClass = contentColor === 'white' ? 'text-white' : 'text-black';
   const descriptionTextClass = contentColor === 'white' ? 'text-white/80' : 'text-neutral-700';
   const sizeClasses = {
-    sm: { width: 'w-48', padding: 'p-3', imageHeight: 'h-16' },
-    md: { width: 'w-56', padding: 'p-4', imageHeight: 'h-20' },
-    lg: { width: 'w-64', padding: 'p-5', imageHeight: 'h-24' },
-    xl: { width: 'w-72', padding: 'p-5', imageHeight: 'h-28' },
-    '2xl': { width: 'w-80', padding: 'p-6', imageHeight: 'h-32' },
+    sm: { width: 'w-24', padding: 'p-2.5', imageHeight: 'h-10' },
+    md: { width: 'w-36', padding: 'p-3', imageHeight: 'h-14' },
+    lg: { width: 'w-48', padding: 'p-4', imageHeight: 'h-16' },
+    xl: { width: 'w-60', padding: 'p-5', imageHeight: 'h-20' },
+    '2xl': { width: 'w-72', padding: 'p-6', imageHeight: 'h-24' },
   } as const;
   const titleClasses = {
-    lg: 'text-base',
     xl: 'text-lg',
     '2xl': 'text-xl',
+    '4xl': 'text-3xl leading-none',
+    '6xl': 'text-5xl leading-none',
   } as const;
   const iconSizeMap = {
-    lg: 16,
     xl: 20,
     '2xl': 24,
+    '4xl': 32,
+    '6xl': 44,
   } as const;
   const currentSize = sizeClasses[cardSize];
+  const fontClassName = fontClassNames[fontFamily];
+  const shapeClasses = {
+    rectangle: {
+      container: 'rounded-lg',
+      content: '',
+      imageHeight: currentSize.imageHeight,
+      imageWrapper: '',
+    },
+    square: {
+      container: 'aspect-square rounded-[1.75rem]',
+      content: 'flex h-full flex-col justify-center',
+      imageHeight: 'h-20',
+      imageWrapper: '',
+    },
+    round: {
+      container: 'aspect-square rounded-full',
+      content: 'flex h-full flex-col justify-center items-center text-center',
+      imageHeight: 'h-20',
+      imageWrapper: 'mx-auto w-full max-w-[72%]',
+    },
+  } as const;
+  const activeShape = shapeClasses[cardShape];
+  const isCenteredShape = cardShape === 'round';
 
   // ── Proper React Flow data update (no direct mutation) ──────────────────────
   const updateNodeData = useCallback(
@@ -102,6 +151,101 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
       setEditTitle(data.title);
     }
   };
+  const hasBadges = badges.length > 0;
+  const hasImage = Boolean(data.image?.src);
+  const sectionVisibility: Record<StageContentSection, boolean> = {
+    icon: showIcon,
+    title: showTitle,
+    description: showDescription,
+    badges: showBadges && hasBadges,
+    image: showImage && hasImage,
+  };
+  const titleBlock = showTitle ? (
+    <div
+      onDoubleClick={() => setIsEditingTitle(true)}
+      className={`min-w-0 cursor-text font-semibold text-center ${titleClasses[titleSize]} ${contentTextClass}`}
+    >
+      {isEditingTitle ? (
+        <input
+          autoFocus
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          onBlur={handleTitleSave}
+          onKeyDown={handleTitleKeyDown}
+          className={`w-full rounded border border-neutral-300 bg-white px-2 py-1 text-center text-sm text-neutral-900 outline-none focus:border-neutral-500 dark:border-white/20 dark:bg-white/10 dark:text-white dark:focus:border-white/40 ${fontClassName}`}
+        />
+      ) : (
+        <span className="block truncate">{data.title}</span>
+      )}
+    </div>
+  ) : null;
+  const contentSections: Partial<Record<StageContentSection, ReactNode>> = {
+    icon: showIcon ? (
+      <div className="flex justify-center">
+        <span
+          className={`inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md ${contentTextClass}`}
+        >
+          {renderStageIcon(data.icon, category, {
+            size: iconSizeMap[iconSize],
+            strokeWidth: 2.2,
+          })}
+        </span>
+      </div>
+    ) : null,
+    title: titleBlock,
+    description: showDescription ? (
+      <p
+        className={`line-clamp-2 text-[11px] leading-snug ${descriptionTextClass} ${
+          isCenteredShape ? 'text-center' : ''
+        }`}
+      >
+        {data.description}
+      </p>
+    ) : null,
+    badges: showBadges && hasBadges ? (
+      <div className={`flex flex-wrap gap-1.5 ${isCenteredShape ? 'justify-center' : ''}`}>
+        {badges.slice(0, 4).map((badge) => (
+          <span
+            key={badge}
+            className="rounded-full border border-black/30 bg-white px-2 py-0.5 text-[10px] font-medium text-black"
+          >
+            {badge}
+          </span>
+        ))}
+        {badges.length > 4 && (
+          <span
+            className="rounded-full border border-black bg-white px-2 py-0.5 text-[10px] font-medium text-black"
+          >
+            +{badges.length - 4}
+          </span>
+        )}
+      </div>
+      ) : null,
+    image: showImage && hasImage ? (
+      <div
+        className={`overflow-hidden rounded-md border border-neutral-300 bg-neutral-100 dark:border-white/10 dark:bg-white/5 ${activeShape.imageWrapper}`}
+      >
+        <Image
+          src={data.image!.src}
+          alt={data.title}
+          width={data.image!.width}
+          height={data.image!.height}
+          unoptimized
+          className={`${activeShape.imageHeight} w-full object-cover`}
+        />
+      </div>
+    ) : null,
+  };
+  const orderedSections = contentOrder
+    .filter(
+      (section, index, array) =>
+        array.indexOf(section) === index &&
+        DEFAULT_STAGE_CONTENT_ORDER.includes(section),
+    )
+    .concat(
+      DEFAULT_STAGE_CONTENT_ORDER.filter((section) => !contentOrder.includes(section)),
+    );
+  const visibleSections = orderedSections.filter((section) => sectionVisibility[section]);
 
   const handleDeleteNode = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -114,7 +258,7 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
 
   return (
     <div
-      className={`group relative ${currentSize.width} rounded-lg border shadow-xl transition-all duration-150`}
+      className={`group relative ${currentSize.width} ${activeShape.container} border shadow-xl transition-all duration-150`}
       style={{
         backgroundColor: cardBackground,
         borderColor: 'transparent',
@@ -163,81 +307,12 @@ export function StageNode({ data, id, selected }: NodeProps<StageData>) {
         style={{ left: '50%', backgroundColor: catConfig.accent }}
       />
 
-      <div className={currentSize.padding}>
-
-        {(showIcon || showTitle) && (
-          <div className="mb-1 flex items-center gap-2">
-            {showIcon && (
-              <span
-                className={`inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md ${contentTextClass}`}
-              >
-                {renderStageIcon(data.icon, category, {
-                  size: iconSizeMap[iconSize],
-                  strokeWidth: 2.2,
-                })}
-              </span>
-            )}
-
-            {showTitle && (
-              <div
-                onDoubleClick={() => setIsEditingTitle(true)}
-                className={`min-w-0 flex-1 cursor-text font-semibold ${titleClasses[titleSize]} ${contentTextClass}`}
-              >
-                {isEditingTitle ? (
-                  <input
-                    autoFocus
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    onBlur={handleTitleSave}
-                    onKeyDown={handleTitleKeyDown}
-                    className="w-full rounded border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-900 outline-none focus:border-neutral-500 dark:border-white/20 dark:bg-white/10 dark:text-white dark:focus:border-white/40"
-                  />
-                ) : (
-                  <span className="block truncate">{data.title}</span>
-                )}
-              </div>
-            )}
+      <div className={`${currentSize.padding} ${fontClassName} ${activeShape.content}`}>
+        {visibleSections.map((section, index) => (
+          <div key={section} className={index < visibleSections.length - 1 ? 'mb-3' : ''}>
+            {contentSections[section]}
           </div>
-        )}
-
-        {showDescription && (
-          <p className={`mb-3 line-clamp-2 text-[11px] leading-snug ${descriptionTextClass}`}>
-            {data.description}
-          </p>
-        )}
-
-        {showBadges && badges.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1.5">
-            {badges.slice(0, 4).map((badge) => (
-              <span
-                key={badge}
-                className="rounded-full border border-black/30 bg-white px-2 py-0.5 text-[10px] font-medium text-black"
-              >
-                {badge}
-              </span>
-            ))}
-            {badges.length > 4 && (
-              <span
-                className="rounded-full border border-black bg-white px-2 py-0.5 text-[10px] font-medium text-black"
-              >
-                +{badges.length - 4}
-              </span>
-            )}
-          </div>
-        )}
-
-        {showImage && data.image?.src && (
-          <div className="overflow-hidden rounded-md border border-neutral-300 bg-neutral-100 dark:border-white/10 dark:bg-white/5">
-            <Image
-              src={data.image.src}
-              alt={data.title}
-              width={data.image.width}
-              height={data.image.height}
-              unoptimized
-              className={`${currentSize.imageHeight} w-full object-cover`}
-            />
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );

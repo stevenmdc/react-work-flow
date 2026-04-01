@@ -37,8 +37,8 @@ import { SketchEdge } from "./SketchEdge";
 import { NODE_TEMPLATES, StageData, NODE_CATEGORY_CONFIG } from "@/types";
 import { getDefaultStageIcon } from "@/lib/stageIcons";
 
-const nodeTypes = { stage: StageNode };
-const edgeTypes = { glow: GlowStepEdge, sketch: SketchEdge };
+const NODE_TYPES = { stage: StageNode };
+const EDGE_TYPES = { glow: GlowStepEdge, sketch: SketchEdge };
 type FlowBackgroundMode = "dots" | "grid";
 type ConnectorMode = "glow" | "sketch";
 type AutoHandleIds = {
@@ -46,6 +46,10 @@ type AutoHandleIds = {
   targetHandle: string;
 };
 type RandomStageAppearance = NonNullable<StageData["appearance"]>;
+type EdgeBundleOffsets = {
+  sourceOffset: number;
+  targetOffset: number;
+};
 
 const INITIAL_NODES: Node<StageData>[] = [
   {
@@ -190,6 +194,96 @@ function getAutoHandleIds(
     : { sourceHandle: "handle-top", targetHandle: "handle-bottom" };
 }
 
+function getHandleAxis(handleId?: string | null) {
+  if (handleId?.includes("top") || handleId?.includes("bottom")) {
+    return "x";
+  }
+
+  return "y";
+}
+
+function getNodeAxisValue(node: Node<StageData> | undefined, axis: "x" | "y") {
+  return axis === "x" ? node?.position.x ?? 0 : node?.position.y ?? 0;
+}
+
+function createBundleOffsets(edgeIds: string[], spacing = 14) {
+  const centered = new Map<string, number>();
+  const centerIndex = (edgeIds.length - 1) / 2;
+
+  edgeIds.forEach((edgeId, index) => {
+    centered.set(edgeId, (index - centerIndex) * spacing);
+  });
+
+  return centered;
+}
+
+function getEdgeBundleOffsets(
+  edges: Edge[],
+  nodes: Node<StageData>[],
+): Record<string, EdgeBundleOffsets> {
+  const nodeMap = new Map(nodes.map((node) => [node.id, node]));
+  const sourceGroups = new Map<string, { edgeId: string; sortValue: number }[]>();
+  const targetGroups = new Map<string, { edgeId: string; sortValue: number }[]>();
+
+  edges.forEach((edge) => {
+    const sourceNode = nodeMap.get(edge.source);
+    const targetNode = nodeMap.get(edge.target);
+    const sourceKey = `${edge.source}:${edge.sourceHandle ?? "auto"}`;
+    const targetKey = `${edge.target}:${edge.targetHandle ?? "auto"}`;
+    const sourceAxis = getHandleAxis(edge.sourceHandle);
+    const targetAxis = getHandleAxis(edge.targetHandle);
+    const sourceGroup = sourceGroups.get(sourceKey) ?? [];
+    const targetGroup = targetGroups.get(targetKey) ?? [];
+
+    sourceGroup.push({
+      edgeId: edge.id,
+      sortValue: getNodeAxisValue(targetNode, sourceAxis),
+    });
+    targetGroup.push({
+      edgeId: edge.id,
+      sortValue: getNodeAxisValue(sourceNode, targetAxis),
+    });
+
+    sourceGroups.set(sourceKey, sourceGroup);
+    targetGroups.set(targetKey, targetGroup);
+  });
+
+  const sourceOffsets = new Map<string, number>();
+  const targetOffsets = new Map<string, number>();
+
+  sourceGroups.forEach((group) => {
+    const sortedIds = [...group]
+      .sort((a, b) => a.sortValue - b.sortValue || a.edgeId.localeCompare(b.edgeId))
+      .map((entry) => entry.edgeId);
+    const offsets = createBundleOffsets(sortedIds);
+
+    offsets.forEach((offset, edgeId) => {
+      sourceOffsets.set(edgeId, offset);
+    });
+  });
+
+  targetGroups.forEach((group) => {
+    const sortedIds = [...group]
+      .sort((a, b) => a.sortValue - b.sortValue || a.edgeId.localeCompare(b.edgeId))
+      .map((entry) => entry.edgeId);
+    const offsets = createBundleOffsets(sortedIds);
+
+    offsets.forEach((offset, edgeId) => {
+      targetOffsets.set(edgeId, offset);
+    });
+  });
+
+  return Object.fromEntries(
+    edges.map((edge) => [
+      edge.id,
+      {
+        sourceOffset: sourceOffsets.get(edge.id) ?? 0,
+        targetOffset: targetOffsets.get(edge.id) ?? 0,
+      },
+    ]),
+  );
+}
+
 function useIsMounted() {
   return useSyncExternalStore(
     emptySubscribe,
@@ -212,6 +306,8 @@ function FlowEditorInner() {
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
+  const nodeTypes = useMemo(() => NODE_TYPES, []);
+  const edgeTypes = useMemo(() => EDGE_TYPES, []);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -425,7 +521,7 @@ function FlowEditorInner() {
     connectorMode === "sketch"
       ? ConnectionLineType.Bezier
       : ConnectionLineType.Step;
-  const themedEdges = useMemo(
+  const resolvedEdges = useMemo(
     () =>
       edges.map((edge) => {
         const sourceNode = nodes.find((node) => node.id === edge.source);
@@ -439,6 +535,24 @@ function FlowEditorInner() {
           ...edge,
           sourceHandle: edge.sourceHandle ?? inferredHandles?.sourceHandle,
           targetHandle: edge.targetHandle ?? inferredHandles?.targetHandle,
+        };
+      }),
+    [edges, nodes],
+  );
+  const edgeBundleOffsets = useMemo(
+    () => getEdgeBundleOffsets(resolvedEdges, nodes),
+    [resolvedEdges, nodes],
+  );
+  const themedEdges = useMemo(
+    () =>
+      resolvedEdges.map((edge) => {
+        const bundleOffsets = edgeBundleOffsets[edge.id] ?? {
+          sourceOffset: 0,
+          targetOffset: 0,
+        };
+
+        return {
+          ...edge,
           type: connectorMode,
           animated: false,
           data: {
@@ -448,6 +562,8 @@ function FlowEditorInner() {
               hoveredEdgeId === edge.id || selectedEdgeId === edge.id,
             onDelete: () => deleteEdgeById(edge.id),
             onReverse: () => reverseEdgeDirection(edge.id),
+            sourceBundleOffset: bundleOffsets.sourceOffset,
+            targetBundleOffset: bundleOffsets.targetOffset,
           },
           style: {
             ...edge.style,
@@ -462,12 +578,12 @@ function FlowEditorInner() {
       beamColor,
       connectorMode,
       deleteEdgeById,
+      edgeBundleOffsets,
       edgeStrokeColor,
       edgeStrokeWidth,
-      edges,
       hoveredEdgeId,
-      nodes,
       reverseEdgeDirection,
+      resolvedEdges,
       selectedEdgeId,
     ],
   );
@@ -499,6 +615,10 @@ function FlowEditorInner() {
         setNodes={setNodes}
         setEdges={setEdges}
         onNodeDeleted={handleNodeDeleted}
+        onNodeDuplicated={(duplicatedId) => {
+          setSelectedNodeId(duplicatedId);
+          setSelectedEdgeId(null);
+        }}
       />
 
       <div className="flex-1 h-full relative" ref={reactFlowWrapper}>

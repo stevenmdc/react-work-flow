@@ -1,7 +1,7 @@
 'use client';
 
 import { memo } from 'react';
-import { BaseEdge, EdgeProps, getSmoothStepPath } from 'reactflow';
+import { BaseEdge, EdgeProps, Position, getSmoothStepPath } from 'reactflow';
 import { motion } from 'framer-motion';
 import { EdgeActionControls } from './EdgeActionControls';
 
@@ -12,7 +12,21 @@ type GlowEdgeData = {
   isInteractive?: boolean;
   onReverse?: () => void;
   onDelete?: () => void;
+  sourceBundleOffset?: number;
+  targetBundleOffset?: number;
 };
+
+function getBundleShift(position: Position, amount: number) {
+  switch (position) {
+    case Position.Top:
+    case Position.Bottom:
+      return { x: amount, y: 0 };
+    case Position.Left:
+    case Position.Right:
+    default:
+      return { x: 0, y: amount };
+  }
+}
 
 export const GlowStepEdge = memo(function GlowStepEdge({
   id,
@@ -26,12 +40,24 @@ export const GlowStepEdge = memo(function GlowStepEdge({
   style,
   data,
 }: EdgeProps<GlowEdgeData>) {
+  const sourceShift = getBundleShift(
+    sourcePosition ?? Position.Right,
+    data?.sourceBundleOffset ?? 0,
+  );
+  const targetShift = getBundleShift(
+    targetPosition ?? Position.Left,
+    data?.targetBundleOffset ?? 0,
+  );
+  const adjustedSourceX = sourceX + sourceShift.x;
+  const adjustedSourceY = sourceY + sourceShift.y;
+  const adjustedTargetX = targetX + targetShift.x;
+  const adjustedTargetY = targetY + targetShift.y;
   const [edgePath, labelX, labelY] = getSmoothStepPath({
-    sourceX,
-    sourceY,
+    sourceX: adjustedSourceX,
+    sourceY: adjustedSourceY,
     sourcePosition,
-    targetX,
-    targetY,
+    targetX: adjustedTargetX,
+    targetY: adjustedTargetY,
     targetPosition,
     borderRadius: 0,
   });
@@ -63,10 +89,10 @@ export const GlowStepEdge = memo(function GlowStepEdge({
         <linearGradient
           id={gradientId}
           gradientUnits="userSpaceOnUse"
-          x1={sourceX}
-          y1={sourceY}
-          x2={targetX}
-          y2={targetY}
+          x1={adjustedSourceX}
+          y1={adjustedSourceY}
+          x2={adjustedTargetX}
+          y2={adjustedTargetY}
         >
           <stop offset="0" stopColor={beamColor} stopOpacity="0" />
           <stop offset="0.5" stopColor={beamColor} stopOpacity="1" />

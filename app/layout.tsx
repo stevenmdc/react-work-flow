@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Caveat, Geist, Geist_Mono, Patrick_Hand } from "next/font/google";
+import { Assistant, Caveat, Geist, Geist_Mono, Patrick_Hand } from "next/font/google";
 import { ThemeProvider } from 'next-themes';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import "./globals.css";
@@ -25,6 +25,12 @@ const caveat = Caveat({
   subsets: ['latin'],
 });
 
+const assistant = Assistant({
+  variable: '--font-assistant',
+  subsets: ['latin'],
+  weight: '400',
+});
+
 export const metadata: Metadata = {
   title: "Customer Journey Flow",
   description: "Interactive customer journey workflow editor",
@@ -38,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${patrickHand.variable} ${caveat.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${patrickHand.variable} ${caveat.variable} ${assistant.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <ThemeToggle />

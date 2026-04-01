@@ -105,10 +105,14 @@ export function SelectField({ label, value, onChange, options }: SelectFieldProp
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-neutral-300 bg-white/80 px-3 py-2 text-xs text-neutral-700 outline-none transition-colors focus:border-neutral-500 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:focus:border-white/30"
+        className="w-full rounded-lg border border-neutral-300 bg-white/80 px-3 py-2 text-xs text-neutral-700 outline-none transition-colors focus:border-neutral-500 [color-scheme:light] dark:border-white/10 dark:bg-[#0f1117] dark:text-white/80 dark:focus:border-white/30 dark:[color-scheme:dark]"
       >
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option
+            key={option.value}
+            value={option.value}
+            className="bg-white text-neutral-700 dark:bg-[#0f1117] dark:text-white"
+          >
             {option.label}
           </option>
         ))}

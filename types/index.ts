@@ -22,15 +22,29 @@ export type NodeCategory =
 export type StageIconKey = string;
 export type StageContentColor = 'black' | 'white';
 export type StageCardSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-export type StageTitleSize = 'lg' | 'xl' | '2xl';
-export type StageIconSize = 'lg' | 'xl' | '2xl';
+export type StageCardShape = 'rectangle' | 'square' | 'round';
+export type StageTitleSize = 'xl' | '2xl' | '4xl' | '6xl';
+export type StageIconSize = 'xl' | '2xl' | '4xl' | '6xl';
+export type StageFontFamily = 'default' | 'assistant' | 'patrick' | 'caveat';
+export type StageContentSection = 'icon' | 'title' | 'description' | 'badges' | 'image';
+
+export const DEFAULT_STAGE_CONTENT_ORDER: StageContentSection[] = [
+  'icon',
+  'title',
+  'description',
+  'badges',
+  'image',
+];
 
 export interface StageAppearance {
   backgroundColor?: string;
   contentColor?: StageContentColor;
   size?: StageCardSize;
+  cardShape?: StageCardShape;
   titleSize?: StageTitleSize;
   iconSize?: StageIconSize;
+  fontFamily?: StageFontFamily;
+  contentOrder?: StageContentSection[];
   showIcon?: boolean;
   showTitle?: boolean;
   showDescription?: boolean;

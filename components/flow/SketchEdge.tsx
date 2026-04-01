@@ -42,6 +42,8 @@ type SketchEdgeData = {
   isInteractive?: boolean;
   onReverse?: () => void;
   onDelete?: () => void;
+  sourceBundleOffset?: number;
+  targetBundleOffset?: number;
 };
 
 function getDirectionVector(position: Position) {
@@ -59,6 +61,18 @@ function getDirectionVector(position: Position) {
   }
 }
 
+function getBundleShift(position: Position, amount: number) {
+  switch (position) {
+    case Position.Top:
+    case Position.Bottom:
+      return { x: amount, y: 0 };
+    case Position.Left:
+    case Position.Right:
+    default:
+      return { x: 0, y: amount };
+  }
+}
+
 export const SketchEdge = memo(function SketchEdge({
   id,
   sourceX,
@@ -71,30 +85,58 @@ export const SketchEdge = memo(function SketchEdge({
   style,
   data,
 }: EdgeProps<SketchEdgeData>) {
+  const sourceShift = getBundleShift(
+    sourcePosition ?? Position.Right,
+    data?.sourceBundleOffset ?? 0,
+  );
+  const targetShift = getBundleShift(
+    targetPosition ?? Position.Left,
+    data?.targetBundleOffset ?? 0,
+  );
+  const adjustedSourceX = sourceX + sourceShift.x;
+  const adjustedSourceY = sourceY + sourceShift.y;
+  const adjustedTargetX = targetX + targetShift.x;
+  const adjustedTargetY = targetY + targetShift.y;
   const variance = getEdgeVariance(id);
-  const deltaX = targetX - sourceX;
-  const deltaY = targetY - sourceY;
+  const deltaX = adjustedTargetX - adjustedSourceX;
+  const deltaY = adjustedTargetY - adjustedSourceY;
   const sourceVector = getDirectionVector(sourcePosition);
   const targetVector = getDirectionVector(targetPosition);
   const bend = Math.min(Math.max(Math.max(Math.abs(deltaX), Math.abs(deltaY)) * 0.32, 42), 120);
   const swingA = ((variance % 19) - 9) * 1.4;
   const swingB = ((Math.floor(variance / 19) % 19) - 9) * 1.4;
-  const controlX1 = sourceX + sourceVector.x * bend + sourceVector.y * swingA;
-  const controlY1 = sourceY + sourceVector.y * bend + sourceVector.x * swingA;
-  const controlX2 = targetX + targetVector.x * bend - targetVector.y * swingB;
-  const controlY2 = targetY + targetVector.y * bend - targetVector.x * swingB;
+  const controlX1 =
+    adjustedSourceX + sourceVector.x * bend + sourceVector.y * swingA;
+  const controlY1 =
+    adjustedSourceY + sourceVector.y * bend + sourceVector.x * swingA;
+  const controlX2 =
+    adjustedTargetX + targetVector.x * bend - targetVector.y * swingB;
+  const controlY2 =
+    adjustedTargetY + targetVector.y * bend - targetVector.x * swingB;
   const mainPath = createSketchPath(
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
+    adjustedSourceX,
+    adjustedSourceY,
+    adjustedTargetX,
+    adjustedTargetY,
     controlX1,
     controlX2,
     controlY1,
     controlY2,
   );
-  const labelX = getBezierPoint(0.5, sourceX, controlX1, controlX2, targetX);
-  const labelY = getBezierPoint(0.5, sourceY, controlY1, controlY2, targetY);
+  const labelX = getBezierPoint(
+    0.5,
+    adjustedSourceX,
+    controlX1,
+    controlX2,
+    adjustedTargetX,
+  );
+  const labelY = getBezierPoint(
+    0.5,
+    adjustedSourceY,
+    controlY1,
+    controlY2,
+    adjustedTargetY,
+  );
   const baseStrokeColor = style?.stroke ?? '#334155b3';
   const baseStrokeWidth = Number(style?.strokeWidth ?? 2.9);
   const interactionWidth = Math.max(baseStrokeWidth + 16, 20);
